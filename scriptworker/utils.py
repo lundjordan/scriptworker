@@ -323,3 +323,18 @@ async def download_file(context, url, abs_filename, session=None, chunk_size=128
                     break
                 fd.write(chunk)
     log.info("Done")
+
+
+async def upload_file(context, url, headers, abs_filename, session=None):
+    session = session or context.session
+    log.info("uploading to %s", url)
+    with open(abs_filename, "rb") as fh:
+        async with session.put(url, data=fh, headers=headers, compress=False) as resp:
+            log.info(resp.status)
+            response_text = await resp.text()
+            log.info(response_text)
+            if resp.status not in (200, 204):
+                raise ScriptWorkerRetryException(
+                    "Bad status {}".format(resp.status),
+                )
+    log.info("Done")
